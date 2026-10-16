@@ -1,0 +1,10 @@
+:root {
+  --color-harbor: #173b57;
+  --color-paper: #f5f6f3;
+  --color-brass: #a87b2e;
+  --color-ink: #27313b;
+  --color-mist: #dde2e4;
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  --sidebar-width: 15rem;
+}

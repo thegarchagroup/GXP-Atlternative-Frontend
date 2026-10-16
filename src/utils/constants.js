@@ -1,0 +1,25 @@
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:1802/api/v1';
+export const POLL_INTERVAL_MS = Math.max(5, Number(import.meta.env.VITE_POLL_INTERVAL_SECONDS || 20)) * 1000;
+
+export const DEPARTMENTS = {
+  FRONT_DESK: { value: 'FRONT_DESK', label: 'Front Desk / Admin', home: '/frontdesk' },
+  HOUSEKEEPING: { value: 'HOUSEKEEPING', label: 'Housekeeping', home: '/housekeeping' },
+  ENGINEERING: { value: 'ENGINEERING', label: 'Engineering', home: '/engineering' },
+};
+export const DEPARTMENT_LIST = Object.values(DEPARTMENTS);
+
+export const OPERATIONAL_STATUSES = [
+  'READY_FOR_GUEST', 'AWAITING_HOUSEKEEPING', 'HOUSEKEEPING_ASSIGNED', 'HOUSEKEEPING_IN_PROGRESS',
+  'ENGINEERING_REQUIRED', 'ENGINEERING_ASSIGNED', 'ENGINEERING_IN_PROGRESS', 'AWAITING_FINAL_VERIFICATION', 'OUT_OF_SERVICE',
+];
+export const TICKET_STATUSES = [
+  'AWAITING_HOUSEKEEPING', 'HOUSEKEEPING_ASSIGNED', 'HOUSEKEEPING_IN_PROGRESS', 'ENGINEERING_REQUIRED',
+  'ENGINEERING_ASSIGNED', 'ENGINEERING_IN_PROGRESS', 'RECLEAN_REQUIRED', 'AWAITING_FINAL_VERIFICATION', 'CLOSED', 'CANCELLED',
+];
+export const REPAIR_STATUSES = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'REOPENED', 'CANCELLED'];
+export const PRIORITIES = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
+export const CHECKLIST_TYPES = {
+  HOUSEKEEPING_CLEANING: 'Housekeeping cleaning',
+  HOUSEKEEPING_INSPECTION: 'Housekeeping inspection',
+  ENGINEERING_INSPECTION: 'Engineering inspection',
+};
