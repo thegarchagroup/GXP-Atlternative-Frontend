@@ -62,8 +62,11 @@ export const unwrap = (p) => p.then((r) => r.data);
 
 /** Absolute URL for a file served by the API (e.g. /api/v1/uploads/12). */
 export function fileUrl(path) {
+  if (/^https?:\/\//.test(path)) return path;
   const base = new URL(API_BASE_URL, window.location.origin);
-  return `${base.origin}${path}`;
+  // Keep any path prefix in front of /api/v1 (e.g. /gxp-api on the server).
+  const prefix = base.pathname.replace(/\/api\/v1\/?$/, '');
+  return `${base.origin}${prefix}${path}`;
 }
 
 export default apiClient;

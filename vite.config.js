@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   return {
+    // The app is served at https://ai.thegarchagroup.com/gxp/
+    base: '/gxp/',
     plugins: [react()],
     server: {
       port: 5173,
