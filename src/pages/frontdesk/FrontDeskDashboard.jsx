@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { Hammer } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import Button from '../../components/common/Button';
 import StatCard from '../../components/dashboard/StatCard';
@@ -9,14 +9,16 @@ import EmptyState, { ErrorBanner } from '../../components/common/EmptyState';
 import { PageLoader } from '../../components/common/LoadingSpinner';
 import StatusBadge from '../../components/common/StatusBadge';
 import RoomActionsDialog from '../../components/tickets/RoomActionsDialog';
-import CreateTicketDialog from '../../components/tickets/CreateTicketDialog';
+import CreateRepairDialog from '../../components/tickets/CreateRepairDialog';
+import ChecklistProgress from '../../components/checklist/ChecklistProgress';
+import { useToast } from '../../context/ToastContext';
+import { dailySheetService } from '../../services/dailySheetService';
 import { useApi } from '../../hooks/useApi';
 import { dashboardService } from '../../services/dashboardService';
 import { roomService } from '../../services/roomService';
-import { turnoverService } from '../../services/turnoverService';
 import { POLL_INTERVAL_MS } from '../../utils/constants';
 import { RACK_BAR } from '../../utils/statusHelpers';
-import { timeAgo } from '../../utils/dateHelpers';
+import { formatShortDate, hotelToday, timeAgo } from '../../utils/dateHelpers';
 
 const CARDS = [
   { key: 'total_rooms', label: 'Total rooms', accent: 'bg-harbor-700' },
@@ -35,14 +37,14 @@ export default function FrontDeskDashboard() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState(null);
   const [selected, setSelected] = useState(null);
-  const [creating, setCreating] = useState(false);
+  const [raising, setRaising] = useState(false);
+  const toast = useToast();
   const summary = useApi(dashboardService.frontdesk, [], { interval: POLL_INTERVAL_MS });
   const rooms = useApi(() => roomService.list({ page_size: 500 }), [], { interval: POLL_INTERVAL_MS });
-  const attention = useApi(() => turnoverService.list({ status: ['AWAITING_FINAL_VERIFICATION', 'AWAITING_HOUSEKEEPING', 'ENGINEERING_REQUIRED'], page_size: 8 }),
-    [], { interval: POLL_INTERVAL_MS });
+  const hkToday = useApi(() => dailySheetService.byDate(hotelToday()), [], { interval: POLL_INTERVAL_MS });
   const notifications = useApi(() => dashboardService.notifications(undefined, true), [], { interval: POLL_INTERVAL_MS });
 
-  const refresh = () => { summary.refresh(); rooms.refresh(); attention.refresh(); };
+  const refresh = () => { summary.refresh(); rooms.refresh(); hkToday.refresh(); };
   const visibleRooms = useMemo(() => {
     const list = rooms.data?.items || [];
     if (!filter) return list;
@@ -60,7 +62,7 @@ export default function FrontDeskDashboard() {
   return (
     <>
       <PageHeader title="Front desk" subtitle="Live room status. Updates every few seconds."
-        actions={<Button icon={LogOut} onClick={() => setCreating(true)}>Record checkout</Button>} />
+        actions={<Button icon={Hammer} onClick={() => setRaising(true)}>Raise repair</Button>} />
       <ErrorBanner error={summary.error || rooms.error} onRetry={refresh} />
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -93,21 +95,26 @@ export default function FrontDeskDashboard() {
         </section>
 
         <div className="space-y-5">
-          <section className="panel" aria-labelledby="attention-title">
-            <div className="panel-header"><h2 id="attention-title" className="text-base font-semibold">Needs attention</h2>
-              <Link to="/frontdesk/tickets" className="text-sm text-harbor-700 hover:underline">All tickets</Link></div>
-            <ul className="divide-y divide-gray-100">
-              {(attention.data?.items || []).length === 0 && <li className="px-4 py-6 text-center text-sm text-gray-500">Nothing waiting on you.</li>}
-              {(attention.data?.items || []).map((t) => (
-                <li key={t.id}>
-                  <button type="button" onClick={() => navigate(`/frontdesk/tickets/${t.id}`)} className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-harbor-50/60">
-                    <span><span className="room-no text-base font-semibold">{t.room_number}</span>
-                      <span className="block text-xs text-gray-500">{t.status === 'AWAITING_HOUSEKEEPING' ? 'Needs a housekeeper' : t.status === 'ENGINEERING_REQUIRED' ? 'Needs an engineer' : 'Ready to release'}</span></span>
-                    <StatusBadge status={t.status} />
-                  </button>
-                </li>
-              ))}
-            </ul>
+          <section className="panel" aria-labelledby="hk-title">
+            <div className="panel-header"><h2 id="hk-title" className="text-base font-semibold">Housekeeping today</h2>
+              <span className="text-xs text-gray-500">{formatShortDate(hotelToday())}</span></div>
+            {hkToday.error?.code === 'NO_TASK_SHEET' ? (
+              <p className="px-4 py-6 text-center text-sm text-gray-500">Today's task sheet has not been uploaded yet.</p>
+            ) : hkToday.data ? (
+              <div className="space-y-3 p-4">
+                <ChecklistProgress progress={{ percent: hkToday.data.summary.total ? Math.round((100 * hkToday.data.summary.done) / hkToday.data.summary.total) : 0,
+                  required_done: hkToday.data.summary.done, required_total: hkToday.data.summary.total, failed: hkToday.data.summary.with_issues }}
+                  unit="rooms done" failedLabel="sent to engineering" />
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                  <dt className="text-gray-500">Rooms on sheet</dt><dd className="text-right font-medium">{hkToday.data.summary.total}</dd>
+                  <dt className="text-gray-500">Arrivals today</dt><dd className="text-right font-medium">{hkToday.data.summary.arrivals}</dd>
+                  <dt className="text-gray-500">Unassigned</dt><dd className="text-right font-medium">{hkToday.data.summary.unassigned}</dd>
+                  <dt className="text-gray-500">In progress</dt><dd className="text-right font-medium">{hkToday.data.summary.in_progress}</dd>
+                  <dt className="text-gray-500">Done</dt><dd className="text-right font-medium">{hkToday.data.summary.done}</dd>
+                  <dt className="text-gray-500">Sent to engineering</dt><dd className="text-right font-medium">{hkToday.data.summary.with_issues}</dd>
+                </dl>
+              </div>
+            ) : <p className="px-4 py-6 text-center text-sm text-gray-500">Loading…</p>}
           </section>
           <section className="panel" aria-labelledby="activity-title">
             <div className="panel-header"><h2 id="activity-title" className="text-base font-semibold">Latest activity</h2></div>
@@ -125,7 +132,7 @@ export default function FrontDeskDashboard() {
       </div>
 
       <RoomActionsDialog room={selected} onClose={() => setSelected(null)} onChanged={refresh} />
-      <CreateTicketDialog open={creating} onClose={() => setCreating(false)} onCreated={(t) => navigate(`/frontdesk/tickets/${t.id}`)} />
+      <CreateRepairDialog open={raising} onClose={() => setRaising(false)} onCreated={(r) => { toast.success(`Repair ${r.repair_number} sent to engineering.`); refresh(); }} />
     </>
   );
 }

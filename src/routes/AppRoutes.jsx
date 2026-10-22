@@ -11,15 +11,13 @@ import NotFoundPage from '../pages/NotFoundPage';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
 import FrontDeskDashboard from '../pages/frontdesk/FrontDeskDashboard';
 import RoomsPage from '../pages/frontdesk/RoomsPage';
-import TurnoverTicketsPage from '../pages/frontdesk/TurnoverTicketsPage';
-import TicketDetailsPage from '../pages/frontdesk/TicketDetailsPage';
 import RepairsPage from '../pages/frontdesk/RepairsPage';
 import UserManagementPage from '../pages/frontdesk/UserManagementPage';
 import ChecklistConfigurationPage from '../pages/frontdesk/ChecklistConfigurationPage';
 import ReportsPage from '../pages/frontdesk/ReportsPage';
-import HousekeepingDashboard from '../pages/housekeeping/HousekeepingDashboard';
-import HousekeepingTicketPage from '../pages/housekeeping/HousekeepingTicketPage';
-import HousekeepingInspectionPage from '../pages/housekeeping/HousekeepingInspectionPage';
+import DailySheetPage from '../pages/housekeeping/DailySheetPage';
+import RunsheetPage from '../pages/housekeeping/RunsheetPage';
+import RoomFormPage from '../pages/housekeeping/RoomFormPage';
 import EngineeringDashboard from '../pages/engineering/EngineeringDashboard';
 import EngineeringTicketPage from '../pages/engineering/EngineeringTicketPage';
 import EngineeringInspectionPage from '../pages/engineering/EngineeringInspectionPage';
@@ -44,22 +42,20 @@ export default function AppRoutes() {
           <Route element={<RoleRoute allow={['ADMIN']} />}>
             <Route path="/frontdesk" element={<FrontDeskDashboard />} />
             <Route path="/frontdesk/rooms" element={<RoomsPage />} />
-            <Route path="/frontdesk/tickets" element={<TurnoverTicketsPage />} />
-            <Route path="/frontdesk/tickets/:ticketId" element={<TicketDetailsPage />} />
             <Route path="/frontdesk/repairs" element={<RepairsPage />} />
             <Route path="/frontdesk/users" element={<UserManagementPage />} />
             <Route path="/frontdesk/reports" element={<ReportsPage />} />
           </Route>
 
           <Route element={<RoleRoute allow={['HK_SUPERVISOR']} />}>
+            <Route path="/housekeeping/daily" element={<DailySheetPage />} />
             <Route path="/housekeeping/team" element={<UserManagementPage />} />
             <Route path="/housekeeping/form" element={<ChecklistConfigurationPage />} />
           </Route>
 
           <Route element={<RoleRoute allow={['ROOM_ATTENDANT']} />}>
-            <Route path="/housekeeping" element={<HousekeepingDashboard />} />
-            <Route path="/housekeeping/tickets/:ticketId" element={<HousekeepingTicketPage />} />
-            <Route path="/housekeeping/tickets/:ticketId/inspection" element={<HousekeepingInspectionPage />} />
+            <Route path="/housekeeping" element={<RunsheetPage />} />
+            <Route path="/housekeeping/runsheet/:entryId" element={<RoomFormPage />} />
           </Route>
 
           <Route element={<RoleRoute allow={['ENG_SUPERVISOR']} />}>

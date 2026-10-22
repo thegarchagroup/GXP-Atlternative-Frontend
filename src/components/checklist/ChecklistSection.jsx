@@ -24,8 +24,8 @@ export function groupResults(results) {
   const groups = [];
   const index = {};
   for (const r of results) {
-    const prefix = r.checklist_type === 'HOUSEKEEPING_CLEANING' ? 'Cleaning' : r.checklist_type === 'ENGINEERING_INSPECTION' ? 'Engineering' : 'Inspection';
-    const key = `${prefix}: ${r.category}`;
+    const prefix = r.checklist_type === 'HOUSEKEEPING_CLEANING' ? 'Cleaning' : r.checklist_type === 'ENGINEERING_INSPECTION' ? 'Engineering check' : 'Engineering items';
+    const key = r.category && r.category !== prefix ? `${prefix}: ${r.category}` : prefix;
     if (!index[key]) {
       index[key] = { title: key, items: [] };
       groups.push(index[key]);

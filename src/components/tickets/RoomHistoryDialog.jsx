@@ -20,7 +20,7 @@ export default function RoomHistoryDialog({ roomId, onClose }) {
               <ul className="divide-y divide-gray-100 rounded-md border border-mist">
                 {data.tickets.map((t) => (
                   <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
-                    <Link to={`/frontdesk/tickets/${t.id}`} className="font-medium text-harbor-700 hover:underline" onClick={onClose}>{t.ticket_number}</Link>
+                    <span className="font-medium">{t.ticket_number}</span>
                     <span className="text-gray-600">{formatDateTime(t.created_at)}</span>
                     <span className="text-gray-600">{t.open_repairs ? `${t.open_repairs} open repair(s)` : ''}</span>
                     <StatusBadge status={t.status} />

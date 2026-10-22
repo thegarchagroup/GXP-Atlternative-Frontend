@@ -22,7 +22,7 @@ function app(path) {
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
             <Route element={<RoleRoute allow={['ADMIN']} />}><Route path="/frontdesk" element={<p>front desk area</p>} /></Route>
-            <Route element={<RoleRoute allow={['HK_SUPERVISOR']} />}><Route path="/housekeeping/team" element={<p>supervisor area</p>} /></Route>
+            <Route element={<RoleRoute allow={['HK_SUPERVISOR']} />}><Route path="/housekeeping/team" element={<p>team area</p>} /><Route path="/housekeeping/daily" element={<p>supervisor area</p>} /></Route>
             <Route element={<RoleRoute allow={['ROOM_ATTENDANT']} />}><Route path="/housekeeping" element={<p>housekeeping area</p>} /></Route>
             <Route path="/unauthorized" element={<p>not allowed</p>} />
           </Route>

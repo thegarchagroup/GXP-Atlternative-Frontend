@@ -8,8 +8,8 @@ import { POLL_INTERVAL_MS } from '../../utils/constants';
 import { timeAgo } from '../../utils/dateHelpers';
 
 function linkFor(n, dept) {
-  if (dept === 'FRONT_DESK' && n.ticket_id) return `/frontdesk/tickets/${n.ticket_id}`;
-  if (dept === 'HOUSEKEEPING' && n.ticket_id) return `/housekeeping/tickets/${n.ticket_id}`;
+  if (dept === 'FRONT_DESK') return null;
+  if (dept === 'HOUSEKEEPING') return null;
   if (dept === 'ENGINEERING' && n.repair_id) return `/engineering/repairs/${n.repair_id}`;
   return null;
 }

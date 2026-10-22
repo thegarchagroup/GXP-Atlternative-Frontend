@@ -1,11 +1,11 @@
-export default function ChecklistProgress({ progress, compact = false }) {
+export default function ChecklistProgress({ progress, compact = false, unit = 'required', failedLabel = 'failed' }) {
   if (!progress) return null;
   const { percent, required_done: done, required_total: total, failed } = progress;
   return (
     <div className={compact ? 'w-32' : 'w-full'}>
       <div className="flex items-baseline justify-between text-xs">
         <span className="font-medium text-slate-ink">{percent}%</span>
-        <span className="text-gray-500">{done}/{total} required{failed ? ` | ${failed} failed` : ''}</span>
+        <span className="text-gray-500">{done}/{total} {unit}{failed ? ` | ${failed} ${failedLabel}` : ''}</span>
       </div>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-gray-200" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}
         aria-label="Required checklist items completed">

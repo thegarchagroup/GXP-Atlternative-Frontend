@@ -50,3 +50,20 @@ export function formatMinutes(min) {
 export function isoDate(d = new Date()) {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
+
+/** Today's date (YYYY-MM-DD) in the hotel's timezone. */
+export function hotelToday() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: hotelTimezone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+}
+
+export function formatShortDate(isoDay) {
+  if (!isoDay) return '—';
+  const [y, m, d] = isoDay.split('-').map(Number);
+  return new Intl.DateTimeFormat(undefined, { day: '2-digit', month: 'short', timeZone: 'UTC' }).format(Date.UTC(y, m - 1, d));
+}
+
+export function formatTime(value) {
+  const d = parse(value);
+  if (!d) return '—';
+  return new Intl.DateTimeFormat(undefined, { timeZone: hotelTimezone, hour: '2-digit', minute: '2-digit' }).format(d);
+}

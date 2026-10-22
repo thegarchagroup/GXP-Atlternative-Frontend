@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Ban, ClipboardList, DoorOpen, Hammer, History, LogIn, LogOut, Pencil, UserPlus } from 'lucide-react';
+import { Ban, DoorOpen, Hammer, History, LogIn, Pencil } from 'lucide-react';
 import Modal from '../common/Modal';
 import StatusBadge from '../common/StatusBadge';
 import ConfirmDialog from '../common/ConfirmDialog';
-import CreateTicketDialog from './CreateTicketDialog';
 import CreateRepairDialog from './CreateRepairDialog';
 import RoomHistoryDialog from './RoomHistoryDialog';
 import RoomFormDialog from './RoomFormDialog';
-import AssignmentDialog from './AssignmentDialog';
 import { roomService } from '../../services/roomService';
-import { turnoverService } from '../../services/turnoverService';
 import { useToast } from '../../context/ToastContext';
 import { formatDateTime } from '../../utils/dateHelpers';
 
@@ -24,7 +21,6 @@ function Action({ icon: Icon, children, onClick, disabled, hint }) {
   );
 }
 
-const HK_ASSIGNABLE = ['AWAITING_HOUSEKEEPING', 'HOUSEKEEPING_ASSIGNED', 'HOUSEKEEPING_IN_PROGRESS'];
 
 /** Everything the front desk can do for one room. */
 export default function RoomActionsDialog({ room, onClose, onChanged }) {
@@ -53,31 +49,18 @@ export default function RoomActionsDialog({ room, onClose, onChanged }) {
           <dt className="text-gray-500">Last ready</dt><dd>{formatDateTime(room.last_ready_at)}</dd>
         </dl>
         <div className="grid gap-2 sm:grid-cols-2">
-          {hasTicket ? (
-            <Action icon={ClipboardList} onClick={() => navigate(`/frontdesk/tickets/${room.active_ticket_id}`)}>Open turnover ticket</Action>
-          ) : (
-            <Action icon={LogOut} onClick={() => setDialog('ticket')} disabled={oos} hint={oos ? 'Return the room to service first' : 'Opens a turnover ticket'}>Record checkout</Action>
-          )}
-          {hasTicket && HK_ASSIGNABLE.includes(room.operational_status) && (
-            <Action icon={UserPlus} onClick={() => setDialog('assign')}>{room.assigned_housekeeper ? 'Reassign housekeeper' : 'Assign housekeeper'}</Action>
-          )}
           {ready && room.occupancy_status === 'VACANT' && <Action icon={LogIn} onClick={() => setDialog('checkin')}>Check guest in</Action>}
           <Action icon={Hammer} onClick={() => setDialog('repair')}
             hint={room.open_repairs ? `${room.open_repairs} repair(s) already open` : 'Send a job to engineering'}>Raise engineering repair</Action>
           {!hasTicket && !oos && <Action icon={Ban} onClick={() => setDialog('oos')}>Take out of service</Action>}
-          {!hasTicket && oos && <Action icon={DoorOpen} onClick={() => setDialog('return')} hint="Sends it to housekeeping first">Return to service</Action>}
+          {!hasTicket && oos && <Action icon={DoorOpen} onClick={() => setDialog('return')} hint="It goes on the next task sheet for cleaning">Return to service</Action>}
           <Action icon={History} onClick={() => setDialog('history')}>Inspection and repair history</Action>
           <Action icon={Pencil} onClick={() => setDialog('edit')}>Edit room details</Action>
         </div>
       </Modal>
 
-      <CreateTicketDialog open={dialog === 'ticket'} room={room} onClose={() => setDialog(null)}
-        onCreated={(t) => { done(`Ticket ${t.ticket_number} opened.`); onClose(); }} />
       <CreateRepairDialog open={dialog === 'repair'} room={room} onClose={() => setDialog(null)}
         onCreated={(r) => { done(`Repair ${r.repair_number} sent to engineering.`); onClose(); }} />
-      <AssignmentDialog open={dialog === 'assign'} title={`Housekeeper for room ${room.room_number}`} department="HOUSEKEEPING"
-        currentId={room.assigned_housekeeper?.id} onClose={() => setDialog(null)}
-        onAssign={async (id, reason) => { await turnoverService.assign(room.active_ticket_id, id, reason); done('Housekeeper assigned.'); onClose(); }} />
       <RoomHistoryDialog roomId={dialog === 'history' ? room.id : null} onClose={() => setDialog(null)} />
       <RoomFormDialog open={dialog === 'edit'} room={room} onClose={() => setDialog(null)} onSaved={() => { done('Room updated.'); onClose(); }} />
       <ConfirmDialog open={dialog === 'checkin'} title={`Check a guest into room ${room.room_number}?`} confirmLabel="Mark occupied"

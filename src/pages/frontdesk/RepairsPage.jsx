@@ -40,7 +40,7 @@ export default function RepairsPage() {
     { key: 'repair_number', header: 'Repair', render: (r) => (isAdmin ? <span className="font-medium">{r.repair_number}</span>
       : <Link className="font-medium text-harbor-700 hover:underline" to={`/engineering/repairs/${r.id}`}>{r.repair_number}</Link>) },
     { key: 'ticket', header: 'Ticket', render: (r) => (r.ticket_id
-      ? (isAdmin ? <Link className="text-harbor-700 hover:underline" to={`/frontdesk/tickets/${r.ticket_id}`}>{r.ticket_number}</Link> : r.ticket_number)
+      ? r.ticket_number
       : <span className="text-gray-500">None</span>) },
     { key: 'origin', header: 'Raised by', render: (r) => (r.origin === 'FRONT_DESK' ? 'Front desk' : 'Housekeeping') },
     { key: 'room', header: 'Room', render: (r) => <span className="room-no font-semibold">{r.room_number}</span> },

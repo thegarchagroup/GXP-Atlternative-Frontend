@@ -17,10 +17,11 @@ const NAV = {
     { to: '/frontdesk/reports', label: 'Reports', icon: BarChart3 },
   ],
   HK_SUPERVISOR: [
+    { to: '/housekeeping/daily', label: 'Daily task sheet', icon: ClipboardList },
     { to: '/housekeeping/team', label: 'Room attendants', icon: Users },
     { to: '/housekeeping/form', label: 'Room form', icon: ListChecks },
   ],
-  ROOM_ATTENDANT: [{ to: '/housekeeping', label: 'My rooms', icon: BedDouble }],
+  ROOM_ATTENDANT: [{ to: '/housekeeping', label: 'My runsheet', icon: BedDouble, end: true }],
   ENG_SUPERVISOR: [
     { to: '/engineering/all', label: 'All repairs', icon: ClipboardList },
     { to: '/engineering/team', label: 'Technicians', icon: Users },

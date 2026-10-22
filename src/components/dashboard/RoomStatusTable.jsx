@@ -11,7 +11,7 @@ export default function RoomStatusTable({ rooms, loading, sort, onSort, renderAc
     { key: 'occupancy_status', header: 'Occupancy', render: (r) => <StatusBadge status={r.occupancy_status} /> },
     { key: 'operational_status', header: 'Status', sortable: true, render: (r) => <StatusBadge status={r.operational_status} /> },
     { key: 'ticket', header: 'Active ticket', render: (r) => (r.active_ticket_id
-      ? <Link to={`/frontdesk/tickets/${r.active_ticket_id}`} className="text-harbor-700 underline-offset-2 hover:underline" onClick={(e) => e.stopPropagation()}>{r.active_ticket_number}</Link>
+      ? r.active_ticket_number
       : '—') },
     { key: 'hk', header: 'Housekeeper', render: (r) => r.assigned_housekeeper?.display_name || '—' },
     { key: 'eng', header: 'Engineer', render: (r) => r.assigned_engineer?.display_name || '—' },

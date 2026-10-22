@@ -10,7 +10,7 @@ export const DEPARTMENT_LIST = Object.values(DEPARTMENTS);
 
 export const ROLES = {
   ADMIN: { label: 'Front Desk admin', department: 'FRONT_DESK', home: '/frontdesk' },
-  HK_SUPERVISOR: { label: 'Housekeeping supervisor', department: 'HOUSEKEEPING', home: '/housekeeping/team' },
+  HK_SUPERVISOR: { label: 'Housekeeping supervisor', department: 'HOUSEKEEPING', home: '/housekeeping/daily' },
   ROOM_ATTENDANT: { label: 'Room attendant', department: 'HOUSEKEEPING', home: '/housekeeping' },
   ENG_SUPERVISOR: { label: 'Engineering supervisor', department: 'ENGINEERING', home: '/engineering/all' },
   TECHNICIAN: { label: 'Technician', department: 'ENGINEERING', home: '/engineering' },
