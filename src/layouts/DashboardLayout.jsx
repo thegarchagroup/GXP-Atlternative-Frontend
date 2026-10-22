@@ -23,12 +23,14 @@ const NAV = {
     { to: '/housekeeping/requests', label: 'Guest requests', icon: MessageSquare },
     { to: '/housekeeping/team', label: 'Room attendants', icon: Users },
     { to: '/housekeeping/form', label: 'Room form', icon: ListChecks },
+    { to: '/housekeeping/reports', label: 'Reports', icon: BarChart3 },
   ],
   ROOM_ATTENDANT: [{ to: '/housekeeping', label: 'My runsheet', icon: BedDouble, end: true }],
   ENG_SUPERVISOR: [
     { to: '/engineering/all', label: 'All repairs', icon: ClipboardList },
     { to: '/engineering/pending', label: 'Pending repairs', icon: Hourglass },
     { to: '/engineering/team', label: 'Technicians', icon: Users },
+    { to: '/engineering/reports', label: 'Reports', icon: BarChart3 },
   ],
   TECHNICIAN: [{ to: '/engineering', label: 'Repair board', icon: Wrench }],
 };

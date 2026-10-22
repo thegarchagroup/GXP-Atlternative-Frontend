@@ -55,6 +55,7 @@ export default function AppRoutes() {
             <Route path="/housekeeping/daily" element={<DailySheetPage />} />
             <Route path="/housekeeping/team" element={<UserManagementPage />} />
             <Route path="/housekeeping/requests" element={<GuestRequestsPage />} />
+            <Route path="/housekeeping/reports" element={<ReportsPage />} />
             <Route path="/housekeeping/form" element={<ChecklistConfigurationPage />} />
           </Route>
 
@@ -67,6 +68,7 @@ export default function AppRoutes() {
             <Route path="/engineering/all" element={<RepairsPage />} />
             <Route path="/engineering/team" element={<UserManagementPage />} />
             <Route path="/engineering/pending" element={<PendingRepairsPage />} />
+            <Route path="/engineering/reports" element={<ReportsPage />} />
           </Route>
 
           <Route element={<DepartmentRoute allow={['ENGINEERING']} />}>
