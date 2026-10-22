@@ -8,6 +8,7 @@ import StatusBadge from '../../components/common/StatusBadge';
 import { PageLoader } from '../../components/common/LoadingSpinner';
 import { ErrorBanner } from '../../components/common/EmptyState';
 import RepairCard from '../../components/tickets/RepairCard';
+import { NotDoableDialog } from '../../components/tickets/PendingDialogs';
 import InspectionResults from '../../components/tickets/InspectionResults';
 import ReadinessPanel from '../../components/tickets/ReadinessPanel';
 import ChecklistSection, { groupResults } from '../../components/checklist/ChecklistSection';
@@ -17,7 +18,8 @@ import { engineeringService } from '../../services/engineeringService';
 import { turnoverService } from '../../services/turnoverService';
 import { useToast } from '../../context/ToastContext';
 import { POLL_INTERVAL_MS } from '../../utils/constants';
-import { formatDateTime } from '../../utils/dateHelpers';
+import { formatDateTime, formatShortDate } from '../../utils/dateHelpers';
+import { PENDING_REASONS } from '../../utils/constants';
 
 export default function EngineeringTicketPage() {
   const { repairId } = useParams();
@@ -25,6 +27,7 @@ export default function EngineeringTicketPage() {
   const toast = useToast();
   const navigate = useNavigate();
   const [reopening, setReopening] = useState(false);
+  const [notDoable, setNotDoable] = useState(false);
   const repair = useApi(() => engineeringService.get(repairId), [repairId], { interval: POLL_INTERVAL_MS });
   const r = repair.data;
   const ticket = useApi(() => turnoverService.get(r.ticket_id), [r?.ticket_id, r?.status], { enabled: !!r?.ticket_id });
@@ -53,6 +56,8 @@ export default function EngineeringTicketPage() {
             {!r.assigned_engineer && ['NEW', 'REOPENED'].includes(r.status) && <Button icon={Hand} loading={claiming} onClick={claim}>Take this repair</Button>}
             {mine && ['ASSIGNED', 'REOPENED'].includes(r.status) && <Button size="lg" icon={Play} loading={starting} onClick={start}>Start repair</Button>}
             {mine && r.status === 'IN_PROGRESS' && <Button size="lg" icon={ClipboardCheck} onClick={() => navigate(`/engineering/repairs/${r.id}/inspection`)}>Continue repair</Button>}
+            {mine && ['ASSIGNED', 'IN_PROGRESS', 'REOPENED'].includes(r.status) && <Button variant="secondary" onClick={() => setNotDoable(true)}>Not doable now</Button>}
+            {mine && r.status === 'PENDING' && <Button size="lg" icon={Play} onClick={() => run(() => engineeringService.resume(repairId), 'Repair resumed.', () => navigate(`/engineering/repairs/${repairId}/inspection`))}>Resume repair</Button>}
             {mine && r.status === 'COMPLETED' && ticketOpen && <Button variant="secondary" onClick={() => setReopening(true)}>Reopen</Button>}
           </>
         )} />
@@ -63,6 +68,14 @@ export default function EngineeringTicketPage() {
           {t && <ReadinessPanel readiness={t.readiness} ticket={t} onRelease={async () => {
             try { ticket.setData(await turnoverService.release(t.id)); toast.success(`Room ${t.room_number} is ready for guests.`); } catch (e) { toast.error(e); }
           }} />}
+          {r.status === 'PENDING' && (
+            <section className={`rounded-[10px] border p-4 text-sm ${r.overdue ? 'border-red-300 bg-red-50' : 'border-amber-300 bg-amber-50'}`}>
+              <p className="font-semibold">Not doable now: {PENDING_REASONS[r.pending_reason]}</p>
+              <p className="mt-1 whitespace-pre-line">{r.pending_note}</p>
+              <p className="mt-1 text-xs text-gray-700">Pending {r.days_pending === 0 ? 'since today' : `for ${r.days_pending} day(s)`}
+                {r.expected_date ? ` | expected by ${formatShortDate(r.expected_date)}${r.overdue ? ' (overdue)' : ''}` : ''} | {r.room_sellable ? 'room can be sold' : 'room is off sale'}</p>
+            </section>
+          )}
           <RepairCard repair={r} />
           <section className="panel p-4">
             <h2 className="text-base font-semibold">{fromFrontDesk ? 'Reported by the front desk' : 'What housekeeping found'}</h2>
@@ -109,6 +122,8 @@ export default function EngineeringTicketPage() {
           </section>
         </aside>
       </div>
+      <NotDoableDialog open={notDoable} repair={r} onClose={() => setNotDoable(false)}
+        onSubmit={async (body) => { repair.setData(await engineeringService.markPending(repairId, body)); toast.success('Moved to pending.'); }} />
       <ConfirmDialog open={reopening} title={`Reopen ${r.repair_number}?`} confirmLabel="Reopen" variant="danger" reasonLabel="What is still wrong?"
         message="The room goes back to engineering and cannot be released until you complete the repair again."
         onCancel={() => setReopening(false)}

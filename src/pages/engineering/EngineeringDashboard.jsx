@@ -22,6 +22,7 @@ const SCOPES = [
   { key: 'awaiting_verification', stat: 'awaiting_verification', label: 'Awaiting verification', accent: 'bg-violet-600' },
   { key: 'completed', stat: 'completed', label: 'Completed', accent: 'bg-emerald-600' },
   { key: 'reopened', stat: 'reopened', label: 'Reopened', accent: 'bg-red-700' },
+  { key: 'pending', stat: 'pending', label: 'Pending (not doable now)', accent: 'bg-amber-600' },
 ];
 
 const EMPTY = {
@@ -31,6 +32,7 @@ const EMPTY = {
   awaiting_verification: 'No finished repairs waiting on re-cleaning or release.',
   completed: 'No completed repairs yet.',
   reopened: 'No reopened repairs.',
+  pending: 'Nothing pending. Repairs you mark as not doable now appear here.',
 };
 
 export default function EngineeringDashboard() {
@@ -69,7 +71,7 @@ export default function EngineeringDashboard() {
     <>
       <PageHeader title="Repair board" subtitle="Repairs raised from housekeeping inspections. Refreshes on its own." />
       <ErrorBanner error={summary.error || list.error} onRetry={() => { summary.reload(); list.reload(); }} />
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
         {SCOPES.map((s) => <StatCard key={s.key} label={s.label} value={summary.data?.[s.stat]} accent={s.accent}
           active={scope === s.key} onClick={() => { setScope(s.key); setPage(1); }} />)}
       </div>

@@ -15,6 +15,8 @@ import RepairsPage from '../pages/frontdesk/RepairsPage';
 import UserManagementPage from '../pages/frontdesk/UserManagementPage';
 import ChecklistConfigurationPage from '../pages/frontdesk/ChecklistConfigurationPage';
 import ReportsPage from '../pages/frontdesk/ReportsPage';
+import GuestRequestsPage from '../pages/frontdesk/GuestRequestsPage';
+import PendingRepairsPage from '../pages/engineering/PendingRepairsPage';
 import DailySheetPage from '../pages/housekeeping/DailySheetPage';
 import RunsheetPage from '../pages/housekeeping/RunsheetPage';
 import RoomFormPage from '../pages/housekeeping/RoomFormPage';
@@ -45,11 +47,14 @@ export default function AppRoutes() {
             <Route path="/frontdesk/repairs" element={<RepairsPage />} />
             <Route path="/frontdesk/users" element={<UserManagementPage />} />
             <Route path="/frontdesk/reports" element={<ReportsPage />} />
+            <Route path="/frontdesk/requests" element={<GuestRequestsPage />} />
+            <Route path="/frontdesk/pending" element={<PendingRepairsPage />} />
           </Route>
 
           <Route element={<RoleRoute allow={['HK_SUPERVISOR']} />}>
             <Route path="/housekeeping/daily" element={<DailySheetPage />} />
             <Route path="/housekeeping/team" element={<UserManagementPage />} />
+            <Route path="/housekeeping/requests" element={<GuestRequestsPage />} />
             <Route path="/housekeeping/form" element={<ChecklistConfigurationPage />} />
           </Route>
 
@@ -61,6 +66,7 @@ export default function AppRoutes() {
           <Route element={<RoleRoute allow={['ENG_SUPERVISOR']} />}>
             <Route path="/engineering/all" element={<RepairsPage />} />
             <Route path="/engineering/team" element={<UserManagementPage />} />
+            <Route path="/engineering/pending" element={<PendingRepairsPage />} />
           </Route>
 
           <Route element={<DepartmentRoute allow={['ENGINEERING']} />}>
