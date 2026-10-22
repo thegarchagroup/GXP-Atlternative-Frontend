@@ -1,10 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import DepartmentRoute from './DepartmentRoute';
+import RoleRoute from './RoleRoute';
 import DashboardLayout from '../layouts/DashboardLayout';
 import AuthLayout from '../layouts/AuthLayout';
 import { useAuth } from '../hooks/useAuth';
-import { DEPARTMENTS } from '../utils/constants';
+import { homeFor } from '../utils/constants';
 import LoginPage from '../pages/LoginPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import UnauthorizedPage from '../pages/UnauthorizedPage';
@@ -25,7 +26,7 @@ import EngineeringInspectionPage from '../pages/engineering/EngineeringInspectio
 
 function HomeRedirect() {
   const { user } = useAuth();
-  return <Navigate to={DEPARTMENTS[user?.department]?.home || '/login'} replace />;
+  return <Navigate to={homeFor(user)} replace />;
 }
 
 export default function AppRoutes() {
@@ -40,21 +41,30 @@ export default function AppRoutes() {
           <Route index element={<HomeRedirect />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-          <Route element={<DepartmentRoute allow={['FRONT_DESK']} />}>
+          <Route element={<RoleRoute allow={['ADMIN']} />}>
             <Route path="/frontdesk" element={<FrontDeskDashboard />} />
             <Route path="/frontdesk/rooms" element={<RoomsPage />} />
             <Route path="/frontdesk/tickets" element={<TurnoverTicketsPage />} />
             <Route path="/frontdesk/tickets/:ticketId" element={<TicketDetailsPage />} />
             <Route path="/frontdesk/repairs" element={<RepairsPage />} />
             <Route path="/frontdesk/users" element={<UserManagementPage />} />
-            <Route path="/frontdesk/checklists" element={<ChecklistConfigurationPage />} />
             <Route path="/frontdesk/reports" element={<ReportsPage />} />
           </Route>
 
-          <Route element={<DepartmentRoute allow={['HOUSEKEEPING']} />}>
+          <Route element={<RoleRoute allow={['HK_SUPERVISOR']} />}>
+            <Route path="/housekeeping/team" element={<UserManagementPage />} />
+            <Route path="/housekeeping/form" element={<ChecklistConfigurationPage />} />
+          </Route>
+
+          <Route element={<RoleRoute allow={['ROOM_ATTENDANT']} />}>
             <Route path="/housekeeping" element={<HousekeepingDashboard />} />
             <Route path="/housekeeping/tickets/:ticketId" element={<HousekeepingTicketPage />} />
             <Route path="/housekeeping/tickets/:ticketId/inspection" element={<HousekeepingInspectionPage />} />
+          </Route>
+
+          <Route element={<RoleRoute allow={['ENG_SUPERVISOR']} />}>
+            <Route path="/engineering/all" element={<RepairsPage />} />
+            <Route path="/engineering/team" element={<UserManagementPage />} />
           </Route>
 
           <Route element={<DepartmentRoute allow={['ENGINEERING']} />}>

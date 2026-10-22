@@ -6,13 +6,13 @@ import { AuthProvider } from '../context/AuthContext';
 import { ToastProvider } from '../context/ToastContext';
 import LoginPage from '../pages/LoginPage';
 import ProtectedRoute from '../routes/ProtectedRoute';
-import DepartmentRoute from '../routes/DepartmentRoute';
+import RoleRoute from '../routes/RoleRoute';
 import { authService } from '../services/authService';
 import { ApiError } from '../services/apiClient';
 
 vi.mock('../services/authService', () => ({ authService: { me: vi.fn(), login: vi.fn(), logout: vi.fn(), changePassword: vi.fn() } }));
 
-const hk = { id: 2, user_id: 'hk.anita', display_name: 'Anita', department: 'HOUSEKEEPING', must_change_password: false };
+const hk = { id: 2, user_id: 'hk.anita', display_name: 'Anita', department: 'HOUSEKEEPING', role: 'ROOM_ATTENDANT', must_change_password: false };
 
 function app(path) {
   return render(
@@ -21,8 +21,9 @@ function app(path) {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
-            <Route element={<DepartmentRoute allow={['FRONT_DESK']} />}><Route path="/frontdesk" element={<p>front desk area</p>} /></Route>
-            <Route element={<DepartmentRoute allow={['HOUSEKEEPING']} />}><Route path="/housekeeping" element={<p>housekeeping area</p>} /></Route>
+            <Route element={<RoleRoute allow={['ADMIN']} />}><Route path="/frontdesk" element={<p>front desk area</p>} /></Route>
+            <Route element={<RoleRoute allow={['HK_SUPERVISOR']} />}><Route path="/housekeeping/team" element={<p>supervisor area</p>} /></Route>
+            <Route element={<RoleRoute allow={['ROOM_ATTENDANT']} />}><Route path="/housekeeping" element={<p>housekeeping area</p>} /></Route>
             <Route path="/unauthorized" element={<p>not allowed</p>} />
           </Route>
         </Routes>
@@ -64,6 +65,23 @@ describe('authentication and route protection', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     await waitFor(() => expect(screen.getByText('housekeeping area')).toBeInTheDocument());
     expect(authService.login).toHaveBeenLastCalledWith('HOUSEKEEPING', 'hk.anita', 'Passw0rd123');
+  });
+
+  it("blocks a room attendant from the supervisor's pages", async () => {
+    authService.me.mockResolvedValue({ user: hk, hotel_timezone: 'UTC' });
+    app('/housekeeping/team');
+    expect(await screen.findByText('not allowed')).toBeInTheDocument();
+  });
+
+  it("sends a supervisor to their own home after sign-in", async () => {
+    authService.me.mockRejectedValue(new ApiError({ status: 401, code: 'UNAUTHORIZED', message: 'no' }));
+    authService.login.mockResolvedValueOnce({ user: { ...hk, role: 'HK_SUPERVISOR' }, hotel_timezone: 'UTC' });
+    app('/login');
+    await userEvent.click(await screen.findByText('Housekeeping'));
+    await userEvent.type(screen.getByLabelText(/User ID/), 'hk.boss');
+    await userEvent.type(screen.getByLabelText(/^Password/), 'Passw0rd123');
+    await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    expect(await screen.findByText('supervisor area')).toBeInTheDocument();
   });
 
   it("blocks another department's pages typed into the URL", async () => {

@@ -5,12 +5,12 @@ import { useAuth } from '../hooks/useAuth';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
 import { ErrorBanner } from '../components/common/EmptyState';
-import { DEPARTMENTS } from '../utils/constants';
+import { homeFor } from '../utils/constants';
 
 const OPTIONS = [
-  { value: 'FRONT_DESK', label: 'Front Desk', hint: 'Admin, rooms and tickets', icon: ConciergeBell },
-  { value: 'HOUSEKEEPING', label: 'Housekeeping', hint: 'Clean and inspect rooms', icon: SprayCan },
-  { value: 'ENGINEERING', label: 'Engineering', hint: 'Repairs and checks', icon: Wrench },
+  { value: 'FRONT_DESK', label: 'Front Desk', hint: 'Rooms, requests and reports', icon: ConciergeBell },
+  { value: 'HOUSEKEEPING', label: 'Housekeeping', hint: 'Supervisors and room attendants', icon: SprayCan },
+  { value: 'ENGINEERING', label: 'Engineering', hint: 'Supervisors and technicians', icon: Wrench },
 ];
 
 export default function LoginPage() {
@@ -26,7 +26,7 @@ export default function LoginPage() {
 
   useEffect(() => { document.title = 'Sign in | Room Turnover'; }, []);
 
-  if (status === 'authenticated' && user) return <Navigate to={DEPARTMENTS[user.department].home} replace />;
+  if (status === 'authenticated' && user) return <Navigate to={homeFor(user)} replace />;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -40,7 +40,7 @@ export default function LoginPage() {
     setApiError(null);
     try {
       const u = await login(department, userId.trim(), password);
-      const home = DEPARTMENTS[u.department].home;
+      const home = homeFor(u);
       const from = location.state?.from;
       navigate(from && from.startsWith(home) ? from : home, { replace: true });
     } catch (err) {

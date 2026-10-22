@@ -14,6 +14,7 @@ import { useApi } from '../../hooks/useApi';
 import { engineeringService } from '../../services/engineeringService';
 import { userService } from '../../services/userService';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../hooks/useAuth';
 import { POLL_INTERVAL_MS, REPAIR_STATUSES } from '../../utils/constants';
 import { statusLabel } from '../../utils/statusHelpers';
 import { formatDateTime } from '../../utils/dateHelpers';
@@ -21,6 +22,7 @@ import { formatDateTime } from '../../utils/dateHelpers';
 const OPEN = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'REOPENED'];
 
 export default function RepairsPage() {
+  const { isAdmin } = useAuth();
   const toast = useToast();
   const [status, setStatus] = useState('open');
   const [engineer, setEngineer] = useState('');
@@ -35,9 +37,10 @@ export default function RepairsPage() {
     [status, engineer, search, page], { interval: POLL_INTERVAL_MS });
 
   const columns = [
-    { key: 'repair_number', header: 'Repair', render: (r) => <span className="font-medium">{r.repair_number}</span> },
+    { key: 'repair_number', header: 'Repair', render: (r) => (isAdmin ? <span className="font-medium">{r.repair_number}</span>
+      : <Link className="font-medium text-harbor-700 hover:underline" to={`/engineering/repairs/${r.id}`}>{r.repair_number}</Link>) },
     { key: 'ticket', header: 'Ticket', render: (r) => (r.ticket_id
-      ? <Link className="text-harbor-700 hover:underline" to={`/frontdesk/tickets/${r.ticket_id}`}>{r.ticket_number}</Link>
+      ? (isAdmin ? <Link className="text-harbor-700 hover:underline" to={`/frontdesk/tickets/${r.ticket_id}`}>{r.ticket_number}</Link> : r.ticket_number)
       : <span className="text-gray-500">None</span>) },
     { key: 'origin', header: 'Raised by', render: (r) => (r.origin === 'FRONT_DESK' ? 'Front desk' : 'Housekeeping') },
     { key: 'room', header: 'Room', render: (r) => <span className="room-no font-semibold">{r.room_number}</span> },
@@ -52,14 +55,15 @@ export default function RepairsPage() {
 
   return (
     <>
-      <PageHeader title="Repairs" subtitle="Engineering requests from failed inspections and from the front desk."
-        actions={<Button icon={Hammer} onClick={() => setRaising(true)}>Raise repair</Button>} />
+      <PageHeader title={isAdmin ? 'Repairs' : 'All repairs'}
+        subtitle={isAdmin ? 'Engineering requests from failed inspections and from the front desk.' : 'Every open and past repair. Assign each one to a technician.'}
+        actions={isAdmin && <Button icon={Hammer} onClick={() => setRaising(true)}>Raise repair</Button>} />
       <section className="panel">
         <div className="grid gap-3 border-b border-mist p-4 sm:grid-cols-3">
           <Input label="Room or repair" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} placeholder="Search…" />
           <Select label="Status" value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }}
             options={[{ value: 'open', label: 'Open repairs' }, { value: '', label: 'All' }, ...REPAIR_STATUSES.map((s) => ({ value: s, label: statusLabel(s) }))]} />
-          <Select label="Engineer" value={engineer} onChange={(e) => { setEngineer(e.target.value); setPage(1); }} placeholder="Anyone"
+          <Select label="Technician" value={engineer} onChange={(e) => { setEngineer(e.target.value); setPage(1); }} placeholder="Anyone"
             options={(engineers.data || []).map((u) => ({ value: String(u.id), label: u.display_name }))} />
         </div>
         {error && <div className="p-4"><ErrorBanner error={error} onRetry={reload} /></div>}

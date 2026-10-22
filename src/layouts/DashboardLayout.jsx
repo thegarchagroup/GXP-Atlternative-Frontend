@@ -4,22 +4,28 @@ import {
   BedDouble, BarChart3, ClipboardList, KeyRound, LayoutGrid, ListChecks, LogOut, Menu, Users, Wrench, X,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { departmentLabel } from '../utils/statusHelpers';
+import { roleLabel } from '../utils/constants';
 import NotificationBell from '../components/dashboard/NotificationBell';
 import ChangePasswordDialog from '../components/common/ChangePasswordDialog';
 
 const NAV = {
-  FRONT_DESK: [
+  ADMIN: [
     { to: '/frontdesk', label: 'Overview', icon: LayoutGrid, end: true },
     { to: '/frontdesk/rooms', label: 'Rooms', icon: BedDouble },
-    { to: '/frontdesk/tickets', label: 'Turnover tickets', icon: ClipboardList },
     { to: '/frontdesk/repairs', label: 'Repairs', icon: Wrench },
-    { to: '/frontdesk/users', label: 'Users', icon: Users },
-    { to: '/frontdesk/checklists', label: 'Checklists', icon: ListChecks },
+    { to: '/frontdesk/users', label: 'Supervisors & admins', icon: Users },
     { to: '/frontdesk/reports', label: 'Reports', icon: BarChart3 },
   ],
-  HOUSEKEEPING: [{ to: '/housekeeping', label: 'My rooms', icon: BedDouble }],
-  ENGINEERING: [{ to: '/engineering', label: 'Repair board', icon: Wrench }],
+  HK_SUPERVISOR: [
+    { to: '/housekeeping/team', label: 'Room attendants', icon: Users },
+    { to: '/housekeeping/form', label: 'Room form', icon: ListChecks },
+  ],
+  ROOM_ATTENDANT: [{ to: '/housekeeping', label: 'My rooms', icon: BedDouble }],
+  ENG_SUPERVISOR: [
+    { to: '/engineering/all', label: 'All repairs', icon: ClipboardList },
+    { to: '/engineering/team', label: 'Technicians', icon: Users },
+  ],
+  TECHNICIAN: [{ to: '/engineering', label: 'Repair board', icon: Wrench }],
 };
 
 function NavItems({ items, onNavigate }) {
@@ -45,7 +51,7 @@ export default function DashboardLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
   const location = useLocation();
-  const items = NAV[user?.department] || [];
+  const items = NAV[user?.role] || [];
   const mustChange = !!user?.must_change_password;
 
   const brand = (
@@ -53,7 +59,7 @@ export default function DashboardLayout() {
       <span className="grid h-8 w-8 place-items-center rounded-md bg-white/10 text-sm font-bold">H</span>
       <span className="leading-tight">
         <span className="block text-sm font-semibold">Room Turnover</span>
-        <span className="block text-2xs text-harbor-100">{departmentLabel(user?.department)}</span>
+        <span className="block text-2xs text-harbor-100">{roleLabel(user?.role)}</span>
       </span>
     </Link>
   );
@@ -87,7 +93,7 @@ export default function DashboardLayout() {
         <NotificationBell key={location.pathname.split('/')[1]} />
         <div className="hidden text-right sm:block">
           <p className="text-sm font-medium leading-tight">{user?.display_name}</p>
-          <p className="text-2xs text-gray-500">{user?.user_id} | {departmentLabel(user?.department)}</p>
+          <p className="text-2xs text-gray-500">{user?.user_id} | {roleLabel(user?.role)}</p>
         </div>
         <button type="button" onClick={() => setPwOpen(true)} className="rounded p-2 text-gray-600 hover:bg-gray-100" aria-label="Change password" title="Change password">
           <KeyRound className="h-4 w-4" />

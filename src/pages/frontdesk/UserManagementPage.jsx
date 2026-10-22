@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import Button from '../../components/common/Button';
@@ -12,24 +12,28 @@ import { useApi } from '../../hooks/useApi';
 import { useAuth } from '../../hooks/useAuth';
 import { userService } from '../../services/userService';
 import { useToast } from '../../context/ToastContext';
-import { DEPARTMENT_LIST } from '../../utils/constants';
-import { departmentLabel } from '../../utils/statusHelpers';
+import { MANAGEABLE_ROLES, roleLabel } from '../../utils/constants';
 import { formatDateTime } from '../../utils/dateHelpers';
 import { validatePassword, validateUserId } from '../../utils/validators';
 
-const deptOptions = DEPARTMENT_LIST.map((d) => ({ value: d.value, label: d.label }));
+const PAGE_TEXT = {
+  ADMIN: { title: 'Supervisors & admins', subtitle: 'Front Desk admins and the Housekeeping and Engineering supervisors.', noun: 'user' },
+  HK_SUPERVISOR: { title: 'Room attendants', subtitle: 'Your housekeeping team.', noun: 'room attendant' },
+  ENG_SUPERVISOR: { title: 'Technicians', subtitle: 'Your engineering team.', noun: 'technician' },
+};
 
-function UserForm({ open, user, onClose, onSaved }) {
+function UserForm({ open, user, onClose, onSaved, roleOptions, noun }) {
   const [form, setForm] = useState({});
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState(null);
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     if (!open) return;
-    setForm(user ? { display_name: user.display_name, department: user.department } : { user_id: '', display_name: '', department: '', password: '' });
+    const only = roleOptions.length === 1 ? roleOptions[0].value : '';
+    setForm(user ? { display_name: user.display_name, role: user.role } : { user_id: '', display_name: '', role: only, password: '' });
     setErrors({});
     setApiError(null);
-  }, [open, user]);
+  }, [open, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const submit = async (e) => {
     e.preventDefault();
@@ -41,32 +45,36 @@ function UserForm({ open, user, onClose, onSaved }) {
       if (pwErr) errs.password = pwErr;
     }
     if (!form.display_name?.trim()) errs.display_name = 'Display name is required.';
-    if (!form.department) errs.department = 'Choose a department.';
+    const role = form.role || (roleOptions.length === 1 ? roleOptions[0].value : '');
+    if (!role) errs.role = 'Choose a role.';
     setErrors(errs);
     if (Object.keys(errs).length) return;
     setBusy(true);
     setApiError(null);
     try {
       const saved = user
-        ? await userService.update(user.id, { display_name: form.display_name.trim(), department: form.department })
-        : await userService.create({ ...form, user_id: form.user_id.trim(), display_name: form.display_name.trim() });
+        ? await userService.update(user.id, { display_name: form.display_name.trim(), role })
+        : await userService.create({ ...form, role, user_id: form.user_id.trim(), display_name: form.display_name.trim() });
       onSaved(saved, !user);
       onClose();
     } catch (err) { setApiError(err); } finally { setBusy(false); }
   };
 
   return (
-    <Modal open={open} onClose={onClose} title={user ? `Edit ${user.user_id}` : 'Create user'} footer={(
-      <><Button variant="secondary" onClick={onClose}>Cancel</Button><Button type="submit" form="user-form" loading={busy}>{user ? 'Save changes' : 'Create user'}</Button></>
+    <Modal open={open} onClose={onClose} title={user ? `Edit ${user.user_id}` : `Create ${noun}`} footer={(
+      <><Button variant="secondary" onClick={onClose}>Cancel</Button><Button type="submit" form="user-form" loading={busy}>{user ? 'Save changes' : `Create ${noun}`}</Button></>
     )}>
       <form id="user-form" onSubmit={submit} className="space-y-3" noValidate>
         <ErrorBanner error={apiError} />
         {!user && <Input label="User ID" required value={form.user_id || ''} error={errors.user_id} help="Used to sign in, e.g. hk.anita"
           onChange={(e) => setForm({ ...form, user_id: e.target.value })} autoComplete="off" />}
         <Input label="Display name" required value={form.display_name || ''} error={errors.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} />
-        <Select label="Department" required value={form.department || ''} error={errors.department} placeholder="Choose…" options={deptOptions}
-          onChange={(e) => setForm({ ...form, department: e.target.value })}
-          help={user && form.department !== user.department ? 'Changing department signs the user out.' : undefined} />
+        {roleOptions.length <= 1 && errors.role && <p className="error-text">{errors.role}</p>}
+        {roleOptions.length > 1 && (
+          <Select label="Role" required value={form.role || ''} error={errors.role} placeholder="Choose…" options={roleOptions}
+            onChange={(e) => setForm({ ...form, role: e.target.value })}
+            help={user && form.role !== user.role ? 'Changing the role signs the user out.' : 'Supervisors sign in under their department.'} />
+        )}
         {!user && <Input label="Initial password" type="password" required value={form.password || ''} error={errors.password} autoComplete="new-password"
           help="They will be asked to choose their own at first sign-in." onChange={(e) => setForm({ ...form, password: e.target.value })} />}
       </form>
@@ -99,8 +107,10 @@ function ResetPasswordDialog({ user, onClose }) {
 
 export default function UserManagementPage() {
   const { user: me } = useAuth();
+  const text = PAGE_TEXT[me.role] || PAGE_TEXT.ADMIN;
+  const roleOptions = useMemo(() => (MANAGEABLE_ROLES[me.role] || []).map((r) => ({ value: r, label: roleLabel(r) })), [me.role]);
   const toast = useToast();
-  const [filters, setFilters] = useState({ search: '', department: '', is_active: '' });
+  const [filters, setFilters] = useState({ search: '', role: '', is_active: '' });
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null);
   const [resetting, setResetting] = useState(null);
@@ -112,7 +122,7 @@ export default function UserManagementPage() {
   const columns = [
     { key: 'user_id', header: 'User ID', render: (u) => <span className="font-medium">{u.user_id}</span> },
     { key: 'display_name', header: 'Name' },
-    { key: 'department', header: 'Department', render: (u) => departmentLabel(u.department) },
+    { key: 'role', header: 'Role', render: (u) => roleLabel(u.role) },
     { key: 'is_active', header: 'Status', render: (u) => (u.is_active ? <span className="text-emerald-800">Active</span> : <span className="text-gray-500">Inactive</span>) },
     { key: 'last_login_at', header: 'Last sign-in', render: (u) => formatDateTime(u.last_login_at) },
     { key: 'a', header: <span className="sr-only">Actions</span>, className: 'text-right', render: (u) => (
@@ -137,11 +147,11 @@ export default function UserManagementPage() {
 
   return (
     <>
-      <PageHeader title="Users" subtitle="Accounts for all three departments." actions={<Button icon={Plus} onClick={() => setEditing('new')}>Create user</Button>} />
+      <PageHeader title={text.title} subtitle={text.subtitle} actions={<Button icon={Plus} onClick={() => setEditing('new')}>Create {text.noun}</Button>} />
       <section className="panel">
         <div className="grid gap-3 border-b border-mist p-4 sm:grid-cols-3">
           <Input label="Search" value={filters.search} onChange={set('search')} placeholder="Name or user ID" />
-          <Select label="Department" value={filters.department} onChange={set('department')} placeholder="All" options={deptOptions} />
+          {roleOptions.length > 1 ? <Select label="Role" value={filters.role} onChange={set('role')} placeholder="All" options={roleOptions} /> : <div />}
           <Select label="Status" value={filters.is_active} onChange={set('is_active')} placeholder="All"
             options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Inactive' }]} />
         </div>
@@ -149,7 +159,7 @@ export default function UserManagementPage() {
         <DataTable columns={columns} rows={data?.items || []} loading={loading} caption="Users" emptyTitle="No users match" />
         <Pagination page={page} pageSize={25} total={data?.total || 0} onPage={setPage} />
       </section>
-      <UserForm open={!!editing} user={editing === 'new' ? null : editing} onClose={() => setEditing(null)}
+      <UserForm open={!!editing} user={editing === 'new' ? null : editing} onClose={() => setEditing(null)} roleOptions={roleOptions} noun={text.noun}
         onSaved={(u, created) => { toast.success(created ? `User ${u.user_id} created.` : 'User updated.'); refresh(); }} />
       <ResetPasswordDialog user={resetting} onClose={() => setResetting(null)} />
       <ConfirmDialog open={!!confirm} onCancel={() => setConfirm(null)} onConfirm={runConfirm}

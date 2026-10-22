@@ -8,6 +8,24 @@ export const DEPARTMENTS = {
 };
 export const DEPARTMENT_LIST = Object.values(DEPARTMENTS);
 
+export const ROLES = {
+  ADMIN: { label: 'Front Desk admin', department: 'FRONT_DESK', home: '/frontdesk' },
+  HK_SUPERVISOR: { label: 'Housekeeping supervisor', department: 'HOUSEKEEPING', home: '/housekeeping/team' },
+  ROOM_ATTENDANT: { label: 'Room attendant', department: 'HOUSEKEEPING', home: '/housekeeping' },
+  ENG_SUPERVISOR: { label: 'Engineering supervisor', department: 'ENGINEERING', home: '/engineering/all' },
+  TECHNICIAN: { label: 'Technician', department: 'ENGINEERING', home: '/engineering' },
+};
+
+/** Which accounts each role may create and manage (mirrors the API). */
+export const MANAGEABLE_ROLES = {
+  ADMIN: ['ADMIN', 'HK_SUPERVISOR', 'ENG_SUPERVISOR'],
+  HK_SUPERVISOR: ['ROOM_ATTENDANT'],
+  ENG_SUPERVISOR: ['TECHNICIAN'],
+};
+
+export const homeFor = (user) => ROLES[user?.role]?.home || DEPARTMENTS[user?.department]?.home || '/login';
+export const roleLabel = (role) => ROLES[role]?.label || role;
+
 export const OPERATIONAL_STATUSES = [
   'READY_FOR_GUEST', 'AWAITING_HOUSEKEEPING', 'HOUSEKEEPING_ASSIGNED', 'HOUSEKEEPING_IN_PROGRESS',
   'ENGINEERING_REQUIRED', 'ENGINEERING_ASSIGNED', 'ENGINEERING_IN_PROGRESS', 'AWAITING_FINAL_VERIFICATION', 'OUT_OF_SERVICE',
