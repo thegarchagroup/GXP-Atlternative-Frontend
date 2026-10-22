@@ -9,6 +9,8 @@ export const dailySheetService = {
   },
   list: () => unwrap(apiClient.get('/housekeeping/daily-sheets')),
   byDate: (taskDate) => unwrap(apiClient.get(`/housekeeping/daily-sheets/by-date/${taskDate}`)),
+  move: (sheetId, taskDate) => unwrap(apiClient.post(`/housekeeping/daily-sheets/${sheetId}/move`, { task_date: taskDate })),
+  runsheetDates: () => unwrap(apiClient.get('/housekeeping/runsheet/dates')),
   addMissingRooms: (sheetId) => unwrap(apiClient.post(`/housekeeping/daily-sheets/${sheetId}/add-missing-rooms`)),
   assign: (sheetId, body) => unwrap(apiClient.post(`/housekeeping/daily-sheets/${sheetId}/assign`, body)),
   runsheet: (taskDate) => unwrap(apiClient.get('/housekeeping/runsheet', { params: taskDate ? { task_date: taskDate } : {} })),

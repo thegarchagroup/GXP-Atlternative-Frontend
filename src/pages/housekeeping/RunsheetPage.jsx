@@ -22,7 +22,11 @@ export default function RunsheetPage() {
   const { user } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
-  const { data, loading, error, reload } = useApi(() => dailySheetService.runsheet(), [], { interval: POLL_INTERVAL_MS });
+  const [viewDate, setViewDate] = useState(hotelToday());
+  const isToday = viewDate === hotelToday();
+  const { data, loading, error, reload } = useApi(() => dailySheetService.runsheet(viewDate), [viewDate], { interval: POLL_INTERVAL_MS });
+  const dates = useApi(dailySheetService.runsheetDates, [], { interval: POLL_INTERVAL_MS });
+  const otherDates = (dates.data?.dates || []).filter((d) => d.task_date !== viewDate && d.rooms > d.done);
   const rooms = data || [];
   const reqs = useApi(() => requestService.list({ status: ['ASSIGNED', 'IN_PROGRESS'] }), [], { interval: POLL_INTERVAL_MS });
   const [finishing, setFinishing] = useState(null);
@@ -38,7 +42,25 @@ export default function RunsheetPage() {
 
   return (
     <>
-      <PageHeader title="My runsheet" subtitle={`${user.display_name} | ${formatShortDate(hotelToday())} | ${done} of ${rooms.length} done. Work top to bottom: arrivals first.`} />
+      <PageHeader title="My runsheet" subtitle={`${user.display_name} | ${formatShortDate(viewDate)} | ${done} of ${rooms.length} done. Work top to bottom: arrivals first.`} />
+      {!isToday && (
+        <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-sky-300 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+          <p>You are looking at your rooms for <span className="font-semibold">{formatShortDate(viewDate)}</span>, not today.</p>
+          <Button size="sm" variant="secondary" onClick={() => setViewDate(hotelToday())}>Back to today</Button>
+        </div>
+      )}
+      {otherDates.length > 0 && (
+        <div role="status" className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold">You also have unfinished rooms on {otherDates.length === 1 ? 'another date' : 'other dates'}:</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {otherDates.map((d) => (
+              <Button key={d.task_date} size="sm" variant="secondary" onClick={() => setViewDate(d.task_date)}>
+                {formatShortDate(d.task_date)}: {d.rooms - d.done} room{d.rooms - d.done === 1 ? '' : 's'}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
       <ErrorBanner error={error} onRetry={reload} />
       {(reqs.data || []).length > 0 && (
         <section className="mb-4" aria-label="Guest requests">

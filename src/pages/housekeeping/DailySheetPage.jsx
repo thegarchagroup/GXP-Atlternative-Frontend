@@ -123,6 +123,16 @@ export default function DailySheetPage() {
             <StatCard label="Sent to engineering" value={s.with_issues} accent="bg-red-600" />
           </div>
 
+          {data.task_date !== hotelToday() && (
+            <div role="status" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-sky-300 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+              <p><span className="font-semibold">This task sheet is dated {formatShortDate(data.task_date)}.</span> Room attendants' runsheets show
+                today's sheet ({formatShortDate(hotelToday())}), so they won't see these rooms today.</p>
+              <Button size="sm" loading={busy} onClick={() => run(async () => {
+                const r = await dailySheetService.move(data.id, hotelToday()); setDay(r.task_date); return r;
+              }, "Moved to today. Assignments were kept and room attendants can see their rooms.")}>Use as today's sheet</Button>
+            </div>
+          )}
+
           {s.missing_rooms.length > 0 && (
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
               <p><span className="font-semibold">{s.missing_rooms.length} room(s) on this sheet are not set up yet</span>: {s.missing_rooms.slice(0, 12).join(', ')}{s.missing_rooms.length > 12 ? '…' : ''}. Room attendants can't start them until they are added.</p>
